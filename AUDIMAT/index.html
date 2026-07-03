@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#16273F">
+<title>AUDIMAT — Audit terrain LPA</title>
+<link rel="manifest" href="manifest.json">
+<style>
+:root{
+  --marine:#16273F; --marine2:#24405F; --ink:#1A2433; --grey:#6B7686;
+  --light:#F4F6F9; --line:#DDE3EA; --acc:#C1442E; --ok:#3E7A5E; --amber:#D97B29;
+  --r:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:-apple-system,'Segoe UI',Roboto,Calibri,sans-serif;background:#EDF0F4;color:var(--ink);padding-bottom:90px}
+header{background:var(--marine);color:#fff;padding:calc(env(safe-area-inset-top) + 14px) 16px 12px;position:sticky;top:0;z-index:20}
+header h1{font-size:17px;font-weight:700;letter-spacing:.5px}
+header .sub{font-size:11px;color:#AEBDD1;margin-top:2px}
+.wrap{max-width:640px;margin:0 auto;padding:14px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;border-radius:var(--r);
+  font-size:15px;font-weight:600;padding:13px 16px;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent}
+.btn:active{transform:scale(.985)}
+.btn-marine{background:var(--marine);color:#fff}
+.btn-out{background:#fff;color:var(--marine);border:1.5px solid var(--marine)}
+.btn-ghost{background:transparent;color:var(--grey);font-weight:500}
+.btn-danger{background:transparent;color:var(--acc)}
+.big2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:6px 0 16px}
+.big2 .btn{flex-direction:column;padding:18px 10px;font-size:16px}
+.big2 .btn small{font-weight:400;font-size:11px;opacity:.75}
+.card{background:#fff;border-radius:var(--r);padding:14px;margin-bottom:10px;box-shadow:0 1px 3px rgba(22,39,63,.08)}
+.rel{display:flex;align-items:center;gap:12px;cursor:pointer}
+.rel .badge{flex:none;width:52px;height:52px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:13px;color:#fff}
+.badge.gare{background:var(--marine)} .badge.bord{background:var(--marine2)}
+.rel .info{flex:1;min-width:0}
+.rel .t{font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rel .m{font-size:12px;color:var(--grey);margin-top:2px}
+.prog{height:5px;background:var(--light);border-radius:3px;margin-top:7px;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--ok);border-radius:3px}
+.empty{text-align:center;color:var(--grey);padding:36px 20px;font-size:14px}
+.empty b{display:block;font-size:16px;color:var(--ink);margin-bottom:6px}
+/* form */
+.sec{background:#fff;border-radius:var(--r);margin-bottom:12px;overflow:hidden;box-shadow:0 1px 3px rgba(22,39,63,.08)}
+.sec>.sh{display:flex;align-items:center;gap:10px;padding:14px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.sh .n{flex:none;width:26px;height:26px;border-radius:50%;background:var(--light);color:var(--marine);
+  font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.sh.done .n{background:var(--ok);color:#fff}
+.sh h3{flex:1;font-size:14.5px}
+.sh .chev{color:var(--grey);transition:transform .2s}
+.sec.open .chev{transform:rotate(90deg)}
+.sb{display:none;padding:0 14px 14px;border-top:1px solid var(--line)}
+.sec.open .sb{display:block}
+.note{font-size:12px;color:var(--grey);font-style:italic;padding:10px 0 4px}
+.q{padding:12px 0;border-bottom:1px dashed var(--line)}
+.q:last-of-type{border-bottom:none}
+.q .ql{font-size:13.5px;font-weight:600;margin-bottom:8px;line-height:1.35}
+label.fl{display:block;font-size:12px;font-weight:700;color:var(--marine);margin:12px 0 5px;text-transform:uppercase;letter-spacing:.4px}
+select,input[type=text],input[type=date],input[type=time],input[type=number],textarea{
+  width:100%;border:1.5px solid var(--line);border-radius:9px;padding:11px;font-size:15px;font-family:inherit;background:#fff;color:var(--ink)}
+textarea{min-height:56px;resize:vertical}
+select:focus,input:focus,textarea:focus{outline:none;border-color:var(--marine)}
+.scale{display:flex;gap:6px}
+.scale button{flex:1;padding:11px 0;border-radius:9px;border:1.5px solid var(--line);background:#fff;
+  font-size:15px;font-weight:700;color:var(--grey);cursor:pointer;font-family:inherit}
+.scale button.on{background:var(--marine);border-color:var(--marine);color:#fff}
+.scale button.on.bad{background:var(--acc);border-color:var(--acc)}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{padding:10px 14px;border-radius:20px;border:1.5px solid var(--line);background:#fff;
+  font-size:13.5px;font-weight:600;color:var(--grey);cursor:pointer;font-family:inherit}
+.seg button.on{background:var(--marine);border-color:var(--marine);color:#fff}
+.q textarea{margin-top:8px}
+.photos{margin-top:12px;background:#FBF3F1;border-radius:9px;padding:10px}
+.photos .ph-h{font-size:12.5px;font-weight:700;color:var(--acc);margin-bottom:8px}
+.ph-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.ph{position:relative;border-radius:8px;overflow:hidden;aspect-ratio:1;background:#e7dcd9}
+.ph img{width:100%;height:100%;object-fit:cover;display:block}
+.ph .del{position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;border:none;
+  background:rgba(0,0,0,.55);color:#fff;font-size:13px;cursor:pointer;line-height:1}
+.ph input{position:absolute;left:0;right:0;bottom:0;border:none;border-radius:0;background:rgba(255,255,255,.92);
+  font-size:10.5px;padding:4px 6px}
+.addph{aspect-ratio:1;border:2px dashed #d9b8b0;border-radius:8px;background:none;color:var(--acc);
+  font-size:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px}
+.addph small{font-size:9.5px;font-weight:600}
+/* synthese */
+.syn{border:1.5px solid var(--line);border-radius:9px;padding:10px;margin-bottom:10px;position:relative}
+.syn .rm{position:absolute;top:8px;right:8px;border:none;background:none;color:var(--grey);font-size:16px;cursor:pointer}
+.critseg{display:flex;gap:6px;margin:8px 0}
+.critseg button{flex:1;padding:9px 0;border-radius:8px;border:1.5px solid var(--line);background:#fff;font-weight:800;font-size:14px;color:var(--grey);cursor:pointer;font-family:inherit}
+.critseg button.on{color:#fff}
+.critseg button.on[data-v="1"]{background:#8A94A3;border-color:#8A94A3}
+.critseg button.on[data-v="2"]{background:var(--amber);border-color:var(--amber)}
+.critseg button.on[data-v="3"]{background:#B85042;border-color:#B85042}
+.critseg button.on[data-v="4"]{background:#8F2413;border-color:#8F2413}
+/* bottom bar */
+.bar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);
+  padding:10px 14px calc(env(safe-area-inset-bottom) + 10px);display:flex;gap:10px;z-index:30}
+.bar .btn{flex:1}
+.save-ind{position:fixed;top:calc(env(safe-area-inset-top) + 62px);right:12px;background:var(--ok);color:#fff;
+  font-size:11px;font-weight:700;padding:5px 10px;border-radius:14px;opacity:0;transition:opacity .25s;z-index:40;pointer-events:none}
+.save-ind.show{opacity:1}
+.toolrow{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.toolrow .btn{font-size:13px;padding:9px 12px}
+.stat{display:flex;gap:8px;margin-bottom:12px}
+.stat .card{flex:1;text-align:center;margin:0;padding:10px}
+.stat .v{font-size:22px;font-weight:800;color:var(--marine)}
+.stat .l{font-size:10.5px;color:var(--grey)}
+.hint{font-size:12px;color:var(--grey);text-align:center;margin-top:14px;line-height:1.5}
+dialog{border:none;border-radius:14px;padding:20px;max-width:340px;width:90%;box-shadow:0 10px 40px rgba(0,0,0,.25)}
+dialog::backdrop{background:rgba(22,39,63,.45)}
+dialog p{font-size:14px;line-height:1.45;margin-bottom:16px}
+dialog .btn{width:100%;margin-top:8px}
+</style>
+</head>
+<body>
+<header>
+  <h1 id="hTitle">AUDIMAT · Landes Pyrénées-Atlantiques</h1>
+  <div class="sub" id="hSub">Groupe 3 — Services & présence humaine</div>
+</header>
+<div class="save-ind" id="saveInd">✓ Enregistré</div>
+<div class="wrap" id="app"></div>
+<div class="bar" id="bar" style="display:none"></div>
+<input type="file" id="importFile" accept=".json,application/json" style="display:none">
+<dialog id="dlg"><p id="dlgMsg"></p><button class="btn btn-marine" id="dlgOk">OK</button><button class="btn btn-ghost" id="dlgCancel">Annuler</button></dialog>
+
+<script>
+/* ================= SPÉCIFICATIONS DES QUESTIONNAIRES ================= */
+const GARES = ["Bordeaux","Pessac","Facture-Biganos","Ychoux","Labouheyre","Morcenx","Dax","Saubusse-les-Bains","St-Geours","St-Vincent-de-Tyrosse","Bénesse-Maremne","Labenne","Ondres","Boucau","Bayonne","Biarritz","Guéthary","St-Jean-de-Luz-Ciboure","Les Deux Jumeaux","Hendaye","Villefranque","Ustaritz","Jatxou","Cambo-les-Bains","Bidarray-Pont-Noblia","Ossès-St-Martin-d'Arrossa","St-Jean-Pied-de-Port","Urt","Peyrehorade","Puyoô","Orthez","Artix","Pau","Croix du Prince","Gan","Buzy-en-Béarn","Ogeu-les-Bains","Oloron-Ste-Marie","Bidos","Lurbe-St-Christau","Sarrance","Bedous","Assat","Coarraze-Nay","Montaut-Bétharram","St-Pé-de-Bigorre","Ossun","Lourdes","Tarbes","Autre"];
+const LIGNES = ["51 Bordeaux–Bayonne–Hendaye(–Irun)","52 Bordeaux–Pau–Tarbes","53 Hendaye–Bayonne–Pau–Tarbes","54 Bayonne–Cambo–St-Jean-Pied-de-Port","55 Pau–Oloron–Bedous","SERM Dax–Bayonne–Hendaye","Dax–Pau–Tarbes"];
+const SEGMENTS = ["Grande gare","Gare moyenne","Petite gare","Halte","Terminus de ligne","Gare d'interconnexion"];
+const CRENEAUX = ["Pointe matin (6h-9h)","Journée creuse (9h-16h)","Pointe soir (16h-19h)","Soirée (après 19h)","Week-end / jour férié"];
+const AFFLUENCE = ["Faible","Moyenne","Forte"];
+const OCCUP = ["Faible (<30%)","Moyenne (30-70%)","Forte (>70%)","Suroccupation (debout)"];
+const MATERIEL = ["Régiolis","Régio2N","AGC (B81500/B82500)","TER 2N NG","X73500","Autre"];
+const RETARD = ["À l'heure","< 5 min","5-15 min","15-30 min","> 30 min","Supprimé"];
+
+/* types de questions : scale (1-5), yn, num, choice, note10, note10x2, text (juste le champ constat) */
+const SPEC = {
+ gare: {
+  label:"GARE", color:"gare",
+  id:[
+   {k:"gare",l:"Gare / halte auditée",t:"select",o:GARES},
+   {k:"lignes",l:"Ligne(s) desservie(s)",t:"select",o:LIGNES},
+   {k:"segment",l:"Segment de gare",t:"select",o:SEGMENTS},
+   {k:"date",l:"Date du relevé",t:"date"},
+   {k:"creneau",l:"Créneau horaire",t:"select",o:CRENEAUX},
+   {k:"affluence",l:"Affluence constatée",t:"select",o:AFFLUENCE},
+  ],
+  sections:[
+   {t:"Services & équipements — inventaire", n:"Cocher l'existant, tester le fonctionnement : un service en panne = angle d'attaque concurrent.", q:[
+    {q:"Espaces d'attente : salle ouverte ? abris de quai ? nombre et état des assises",w:"scale"},
+    {q:"Toilettes : présentes ? ouvertes ? gratuites ou payantes ? propreté",w:"yn+scale"},
+    {q:"Confort d'attente : chauffage/clim, éclairage, prises, wifi gare (tester le wifi)",w:"yn"},
+    {q:"Services bagages : consignes, chariots — présence et fonctionnement",w:"yn"},
+    {q:"Services vélo : abris, consignes, arceaux — capacité, état, remplissage",w:"scale"},
+    {q:"Commerces / distributeurs : ouverts, fonctionnels, approvisionnés ?",w:"yn"},
+    {q:"Services payants vs gratuits : le rapport service/prix est-il défendable ?",w:"text"},
+   ]},
+   {t:"Services — qualité d'usage & état", q:[
+    {q:"Propreté générale (hall, quais, mobilier, poubelles)",w:"scale"},
+    {q:"État du mobilier : dégradations, tags, équipements HS non réparés",w:"scale"},
+    {q:"Le hall donne-t-il envie d'attendre là plutôt que sur le parking ?",w:"scale"},
+    {q:"Services faciles à repérer/utiliser pour un occasionnel ou touriste (signalétique, langues) ?",w:"scale"},
+    {q:"Cette gare offre-t-elle le niveau de service attendu pour son segment ?",w:"text"},
+   ]},
+   {t:"Information voyageurs en gare", q:[
+    {q:"IV temps réel : écrans, afficheurs quai, annonces — présence et fonctionnement",w:"yn"},
+    {q:"Info exacte, à jour, cohérente ? Trouve-t-on son quai en moins de 2 min ?",w:"scale"},
+    {q:"Affichage statique : fiches horaires, plans — présents, à jour, lisibles ?",w:"yn"},
+    {q:"IV compréhensible pour un occasionnel / touriste / étranger (langues, pictos) ?",w:"scale"},
+    {q:"Situation perturbée observée : qualité et rapidité de l'info",w:"scale"},
+   ]},
+   {t:"Présence humaine effective", q:[
+    {q:"Guichet ouvert au passage ? Horaires affichés vs constatés",w:"yn"},
+    {q:"Nombre d'agents visibles (guichet, hall, quais)",w:"num"},
+    {q:"Agents identifiables (tenue, badge) ? En contact clients ou en retrait ?",w:"yn"},
+    {q:"Autres présences : commerçant, médiation, nettoyage...",w:"text"},
+    {q:"Hors ouverture du guichet : quelle présence humaine subsiste ?",w:"text"},
+    {q:"La gare paraît-elle « vivante » ou « abandonnée » ? Pourquoi ?",w:"choice",o:["Vivante","Entre les deux","Abandonnée"]},
+   ]},
+   {t:"Accessibilité de l'assistance (tests mystère)", n:"Se mettre en situation de client ayant besoin d'aide.", q:[
+    {q:"Temps pour trouver un humain (ou contact humain à distance)",w:"num",u:"min"},
+    {q:"Test mystère : réponse claire, complète, aimable ?",w:"scale"},
+    {q:"Agent proactif (vient vers les clients perdus) ou à aller chercher ?",w:"choice",o:["Proactif","Sur sollicitation","Introuvable"]},
+    {q:"Interphone / borne / visio-guichet : présents ? testés ? réponse obtenue ?",w:"yn"},
+    {q:"Un occasionnel / étranger / senior peu digital obtient-il de l'aide facilement ?",w:"scale"},
+   ]},
+   {t:"Sentiment d'accompagnement & réassurance", n:"Ressenti lié à la présence humaine (la sûreté technique = groupe 2).", q:[
+    {q:"La présence humaine rassure-t-elle ? Accompagné en cas de problème ?",w:"scale"},
+    {q:"Soirée / heure creuse : sentiment d'abandon ou d'insécurité perceptible ?",w:"yn"},
+    {q:"Moments-clés (arrivée d'un train, perturbation) : quelqu'un pour accueillir, orienter ?",w:"text"},
+   ]},
+   {t:"Regards clients (micro-interviews)", n:"Se présenter comme chercheur/journaliste, jamais SNCF.", q:[
+    {q:"Verbatims services : ce qu'ils pensent, ce qui leur manque",w:"text"},
+    {q:"Verbatims présence humaine : se sentent-ils accompagnés ? ça joue sur leur choix du train ?",w:"text"},
+    {q:"Notes clients /10 — services & présence humaine",w:"note10x2"},
+   ]},
+   {t:"Regard challenger", q:[
+    {q:"Sur quoi un challenger attaquerait-il cette gare, par ordre de criticité ?",w:"text"},
+    {q:"Promesses « faussement attractives » possibles + contre-arguments",w:"text"},
+    {q:"Bonnes pratiques à valoriser auprès de l'AO",w:"text"},
+    {q:"Le « quick win » à faire avant fin d'année ici",w:"text"},
+   ]},
+  ]
+ },
+ bord: {
+  label:"BORD", color:"bord",
+  id:[
+   {k:"train",l:"N° du train",t:"text",ph:"ex. 866412"},
+   {k:"ligne",l:"Ligne du lot",t:"select",o:LIGNES},
+   {k:"montee",l:"Gare de montée",t:"select",o:GARES},
+   {k:"descente",l:"Gare de descente",t:"select",o:GARES},
+   {k:"date",l:"Date du trajet",t:"date"},
+   {k:"heure",l:"Heure de départ (théorique)",t:"time"},
+   {k:"retard",l:"Retard constaté au départ",t:"select",o:RETARD},
+   {k:"materiel",l:"Type de matériel",t:"select",o:MATERIEL},
+   {k:"occup",l:"Taux d'occupation",t:"select",o:OCCUP},
+  ],
+  sections:[
+   {t:"Équipements & services à bord — inventaire", n:"Tester systématiquement : une prise HS se relève photo à l'appui.", q:[
+    {q:"Équipements présents : prises/USB, wifi, tablettes, porte-bagages, vélos, clim",w:"text"},
+    {q:"Les équipements fonctionnent-ils ? (tester prises, wifi, clim...)",w:"yn"},
+    {q:"Toilettes à bord : présentes ? en service ? propreté ?",w:"yn+scale"},
+    {q:"1re classe : existe-t-elle ? qu'offre-t-elle réellement ?",w:"yn"},
+    {q:"Espaces vélos : capacité, embarquement, cohabitation (enjeu Vélodyssée)",w:"scale"},
+    {q:"Espaces bagages : suffisants pour des touristes avec valises, même train chargé ?",w:"scale"},
+    {q:"Restauration / distribution à bord : une offre, même minimale ?",w:"yn"},
+   ]},
+   {t:"Qualité d'usage & confort", q:[
+    {q:"Propreté de la rame (sièges, sols, vitres, tablettes)",w:"scale"},
+    {q:"État intérieur : dégradations, équipements HS non signalés, usure",w:"scale"},
+    {q:"Confort d'assise, espace, température, bruit",w:"scale"},
+    {q:"En forte occupation : qualité de service encore acceptable ?",w:"scale"},
+    {q:"Services au niveau attendu pour la durée du trajet ? (2h20 sans wifi ni prise...)",w:"text"},
+   ]},
+   {t:"Information voyageurs à bord", q:[
+    {q:"IV à bord : écrans, annonces, plans de ligne — présence et fonctionnement",w:"yn"},
+    {q:"Qualité des annonces : audibilité, fréquence, correspondances ; multilingues ?",w:"scale"},
+    {q:"Un occasionnel sait-il à tout moment où il est et quand il arrive ?",w:"yn"},
+    {q:"Situation perturbée vécue : qualité et rapidité de l'info à bord",w:"scale"},
+   ]},
+   {t:"Présence du personnel à bord", q:[
+    {q:"ASCT à bord ? Présence annoncée / signalée aux voyageurs ?",w:"yn"},
+    {q:"Embarquement : agent sur le quai, accueil, aide spontanée ?",w:"yn"},
+    {q:"Nombre de passages d'un agent dans votre voiture",w:"num"},
+    {q:"Agent visible et accessible, ou invisible (cabine, extrémité) ?",w:"choice",o:["Visible & accessible","Vu une fois","Invisible"]},
+    {q:"Sans passage d'agent : comment obtenir de l'aide humaine à bord ? (tester)",w:"text"},
+    {q:"À la descente / correspondance : présence humaine pour orienter ?",w:"yn"},
+   ]},
+   {t:"Qualité de l'interaction (tests mystère)", q:[
+    {q:"Contrôlé ? Posture de l'agent : courtoisie, pédagogie, situations délicates",w:"yn+scale"},
+    {q:"Test mystère : question à l'agent — réponse claire, complète, aimable ?",w:"scale"},
+    {q:"Agent proactif envers les clients fragiles (seniors, familles, touristes perdus) ?",w:"scale"},
+    {q:"Perturbation vécue : agent présent, informe de vive voix, gère les correspondances ?",w:"text"},
+    {q:"Annonces « à la voix » de l'agent : utilisées ? chaleur / réassurance ?",w:"yn"},
+   ]},
+   {t:"Sentiment d'accompagnement à bord", q:[
+    {q:"Vous êtes-vous senti « accompagné » pendant ce trajet ? Pourquoi ?",w:"scale"},
+    {q:"Soirée / voiture peu remplie : sentiment d'abandon ?",w:"yn"},
+    {q:"Incivilités observées : réaction humaine ?",w:"text"},
+   ]},
+   {t:"Regards clients à bord (micro-interviews)", n:"Se présenter comme chercheur/journaliste, jamais SNCF.", q:[
+    {q:"Verbatims services : ce qu'ils pensent des équipements, ce qui manque",w:"text"},
+    {q:"Verbatims présence : savent-ils s'il y a un agent ? important ? en confiance le soir ?",w:"text"},
+    {q:"Notes clients /10 — services & présence humaine",w:"note10x2"},
+   ]},
+   {t:"Regard challenger", q:[
+    {q:"Sur quoi un challenger attaquerait-il ce train / cette ligne ?",w:"text"},
+    {q:"Promesses « faussement attractives » + contre-arguments (EAS, coût...)",w:"text"},
+    {q:"Bonnes pratiques à bord, à valoriser auprès de l'AO",w:"text"},
+    {q:"Le « quick win » à déployer à bord avant fin d'année",w:"text"},
+   ]},
+  ]
+ }
+};
+
+/* ================= STOCKAGE (IndexedDB) ================= */
+let db;
+function openDB(){return new Promise((res,rej)=>{
+  const r=indexedDB.open("audimat",1);
+  r.onupgradeneeded=e=>{e.target.result.createObjectStore("releves",{keyPath:"id"})};
+  r.onsuccess=e=>{db=e.target.result;res()};
+  r.onerror=()=>rej(r.error);
+})}
+const tx=m=>db.transaction("releves",m).objectStore("releves");
+const dbPut=r=>new Promise((res,rej)=>{const q=tx("readwrite").put(r);q.onsuccess=res;q.onerror=()=>rej(q.error)});
+const dbAll=()=>new Promise((res,rej)=>{const q=tx("readonly").getAll();q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)});
+const dbGet=id=>new Promise((res,rej)=>{const q=tx("readonly").get(id);q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)});
+const dbDel=id=>new Promise((res,rej)=>{const q=tx("readwrite").delete(id);q.onsuccess=res;q.onerror=()=>rej(q.error)});
+
+/* ================= ÉTAT & AIDES ================= */
+const $=s=>document.querySelector(s);
+const app=$("#app"), bar=$("#bar");
+let cur=null, saveT=null;
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const esc=s=>(s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function newReleve(type){
+  const s=SPEC[type];
+  return {id:uid(),type,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),
+    ident:{}, sections:s.sections.map(()=>({answers:{},photos:[]})), synthese:[]};
+}
+function relTitle(r){
+  if(r.type==="gare") return r.ident.gare||"Gare non renseignée";
+  const t=r.ident.train?("TER "+r.ident.train):"Train";
+  return t+((r.ident.montee&&r.ident.descente)?(" · "+r.ident.montee+" → "+r.ident.descente):"");
+}
+function relProgress(r){
+  const spec=SPEC[r.type];
+  let tot=0,done=0;
+  spec.sections.forEach((sec,i)=>{sec.q.forEach((q,j)=>{tot++;
+    const a=r.sections[i].answers[j]||{};
+    if(a.v!==undefined&&a.v!==""||a.c) done++;
+  })});
+  return Math.round(done/tot*100);
+}
+function markSaved(){const i=$("#saveInd");i.classList.add("show");setTimeout(()=>i.classList.remove("show"),1200)}
+async function save(){if(!cur)return;cur.updatedAt=new Date().toISOString();await dbPut(cur);markSaved()}
+function saveSoon(){clearTimeout(saveT);saveT=setTimeout(save,500)}
+
+function ask(msg,okLabel){return new Promise(res=>{
+  $("#dlgMsg").textContent=msg;$("#dlgOk").textContent=okLabel||"OK";
+  const d=$("#dlg");d.showModal();
+  $("#dlgOk").onclick=()=>{d.close();res(true)};
+  $("#dlgCancel").onclick=()=>{d.close();res(false)};
+})}
+
+/* ================= ACCUEIL ================= */
+async function renderHome(){
+  cur=null;bar.style.display="none";
+  $("#hTitle").textContent="AUDIMAT · Landes Pyrénées-Atlantiques";
+  $("#hSub").textContent="Groupe 3 — Services & présence humaine";
+  const all=(await dbAll()).sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt));
+  const nG=all.filter(r=>r.type==="gare").length, nB=all.filter(r=>r.type==="bord").length;
+  let h=`<div class="big2">
+    <button class="btn btn-marine" onclick="startNew('gare')">🏢 Relevé GARE<small>services + présence humaine</small></button>
+    <button class="btn btn-marine" style="background:var(--marine2)" onclick="startNew('bord')">🚆 Relevé BORD<small>services + présence humaine</small></button>
+  </div>
+  <div class="stat">
+    <div class="card"><div class="v">${nG}</div><div class="l">relevés gare</div></div>
+    <div class="card"><div class="v">${nB}</div><div class="l">relevés bord</div></div>
+    <div class="card"><div class="v">${all.reduce((s,r)=>s+r.sections.reduce((x,y)=>x+y.photos.length,0),0)}</div><div class="l">photos</div></div>
+  </div>
+  <div class="toolrow">
+    <button class="btn btn-out" onclick="exportAll()">⬇︎ Exporter tout</button>
+    <button class="btn btn-out" onclick="$('#importFile').click()">⬆︎ Importer / fusionner</button>
+  </div>`;
+  if(!all.length){
+    h+=`<div class="empty"><b>Aucun relevé pour l'instant</b>Une situation le justifie ? Lance un relevé GARE ou BORD ci-dessus. Tout s'enregistre automatiquement sur ce téléphone, même sans réseau.</div>`;
+  } else {
+    h+=all.map(r=>{
+      const p=relProgress(r), nph=r.sections.reduce((s,x)=>s+x.photos.length,0);
+      return `<div class="card rel" onclick="openReleve('${r.id}')">
+        <div class="badge ${SPEC[r.type].color}">${SPEC[r.type].label}</div>
+        <div class="info">
+          <div class="t">${esc(relTitle(r))}</div>
+          <div class="m">${r.ident.date||""} ${esc(r.ident.creneau||r.ident.heure||"")} · ${nph} photo${nph>1?"s":""} · ${p} %</div>
+          <div class="prog"><i style="width:${p}%"></i></div>
+        </div>
+        <button class="btn btn-danger" style="padding:8px" onclick="event.stopPropagation();delReleve('${r.id}')">✕</button>
+      </div>`;
+    }).join("");
+  }
+  h+=`<p class="hint">Les données restent sur ce téléphone (hors-ligne OK).<br>En fin de journée : « Exporter tout » et envoyer le fichier à Aurélien.</p>`;
+  app.innerHTML=h;
+  window.scrollTo(0,0);
+}
+async function startNew(type){cur=newReleve(type);cur.ident.date=new Date().toISOString().slice(0,10);await dbPut(cur);renderForm(0)}
+async function openReleve(id){cur=await dbGet(id);renderForm()}
+async function delReleve(id){
+  if(await ask("Supprimer définitivement ce relevé (et ses photos) ?","Supprimer")){await dbDel(id);renderHome()}
+}
+
+/* ================= FORMULAIRE ================= */
+function renderForm(openIdx){
+  const spec=SPEC[cur.type];
+  $("#hTitle").textContent=(cur.type==="gare"?"🏢 ":"🚆 ")+"Relevé "+spec.label;
+  $("#hSub").textContent=relTitle(cur);
+  let h=`<div class="sec open"><div class="sh" onclick="tgl(this)"><div class="n">0</div><h3>Identification</h3><span class="chev">›</span></div><div class="sb">`;
+  spec.id.forEach(f=>{
+    h+=`<label class="fl">${f.l}</label>`;
+    const v=cur.ident[f.k]||"";
+    if(f.t==="select"){
+      h+=`<select onchange="setId('${f.k}',this.value)"><option value="">— choisir —</option>`+
+        f.o.map(o=>`<option ${o===v?"selected":""}>${esc(o)}</option>`).join("")+`</select>`;
+    } else {
+      h+=`<input type="${f.t}" value="${esc(v)}" placeholder="${esc(f.ph||"")}" onchange="setId('${f.k}',this.value)">`;
+    }
+  });
+  h+=`</div></div>`;
+
+  spec.sections.forEach((sec,i)=>{
+    const st=cur.sections[i];
+    const answered=sec.q.filter((q,j)=>{const a=st.answers[j]||{};return a.v!==undefined&&a.v!==""||a.c}).length;
+    const done=answered===sec.q.length;
+    h+=`<div class="sec ${i===openIdx?"open":""}"><div class="sh ${done?"done":""}" onclick="tgl(this)">
+      <div class="n">${done?"✓":i+1}</div><h3>${esc(sec.t)}</h3><span class="chev">›</span></div><div class="sb">`;
+    if(sec.n) h+=`<div class="note">${esc(sec.n)}</div>`;
+    sec.q.forEach((q,j)=>{
+      const a=st.answers[j]||{};
+      h+=`<div class="q"><div class="ql">${esc(q.q)}${q.u?" <span style='color:var(--grey)'>("+q.u+")</span>":""}</div>`;
+      if(q.w.includes("scale")){
+        h+=`<div class="scale">`+[1,2,3,4,5].map(n=>
+          `<button class="${a.v==n?("on"+(n<=2?" bad":"")):""}" onclick="setA(${i},${j},'v',${a.v==n?"''":n},this)">${n}</button>`).join("")+`</div>`;
+      }
+      if(q.w.includes("yn")){
+        h+=`<div class="seg" style="margin-top:${q.w.includes("scale")?"8px":"0"}">`+["Oui","Non","Partiel","N/A"].map(o=>
+          `<button class="${a.yn===o?"on":""}" onclick="setA(${i},${j},'yn','${o}',this)">${o}</button>`).join("")+`</div>`;
+      }
+      if(q.w==="choice"){
+        h+=`<div class="seg">`+q.o.map(o=>
+          `<button class="${a.v===o?"on":""}" onclick="setA(${i},${j},'v','${esc(o)}',this)">${esc(o)}</button>`).join("")+`</div>`;
+      }
+      if(q.w==="num"){
+        h+=`<input type="number" inputmode="numeric" style="max-width:130px" value="${a.v??""}" onchange="setA(${i},${j},'v',this.value)">`;
+      }
+      if(q.w==="note10x2"){
+        h+=`<div style="display:flex;gap:10px">
+          <div style="flex:1"><label class="fl" style="margin-top:0">Services /10</label><input type="number" inputmode="numeric" min="0" max="10" value="${a.n1??""}" onchange="setA(${i},${j},'n1',this.value)"></div>
+          <div style="flex:1"><label class="fl" style="margin-top:0">Présence /10</label><input type="number" inputmode="numeric" min="0" max="10" value="${a.n2??""}" onchange="setA(${i},${j},'n2',this.value)"></div></div>`;
+      }
+      h+=`<textarea placeholder="Constat, détail, verbatim..." onchange="setA(${i},${j},'c',this.value)">${esc(a.c||"")}</textarea></div>`;
+    });
+    h+=`<div class="photos"><div class="ph-h">📷 Photos / vidéos de cette section</div><div class="ph-grid" id="phg-${i}">`;
+    st.photos.forEach((ph,k)=>{h+=phTile(i,k,ph)});
+    h+=`<button class="addph" onclick="$('#phin-${i}').click()">＋<small>ajouter</small></button></div>
+      <input type="file" id="phin-${i}" accept="image/*" capture="environment" multiple style="display:none" onchange="addPhotos(${i},this)"></div>`;
+    h+=`</div></div>`;
+  });
+
+  /* synthèse */
+  h+=`<div class="sec"><div class="sh" onclick="tgl(this)"><div class="n">★</div><h3>Synthèse — points marquants & criticité</h3><span class="chev">›</span></div><div class="sb">
+    <div class="note">Faiblesses ET bonnes pratiques, hiérarchisées : 1 détail · 2 irritant · 3 faiblesse notable · 4 angle d'attaque majeur.</div>
+    <div id="synList">`+cur.synthese.map((s,k)=>synTile(s,k)).join("")+`</div>
+    <button class="btn btn-out" style="width:100%" onclick="addSyn()">＋ Ajouter un point</button>
+  </div></div>`;
+  app.innerHTML=h;
+  bar.style.display="flex";
+  bar.innerHTML=`<button class="btn btn-ghost" onclick="renderHome()">‹ Mes relevés</button>
+    <button class="btn btn-marine" onclick="save().then(renderHome)">Enregistrer & fermer</button>`;
+  window.scrollTo(0,0);
+}
+function phTile(i,k,ph){
+  return `<div class="ph"><img src="${ph.d}" onclick="viewPh('${ph.d.slice(0,0)}',${i},${k})">
+    <button class="del" onclick="delPh(${i},${k})">✕</button>
+    <input placeholder="légende" value="${esc(ph.l||"")}" onclick="event.stopPropagation()" onchange="cur.sections[${i}].photos[${k}].l=this.value;saveSoon()"></div>`;
+}
+function synTile(s,k){
+  return `<div class="syn"><button class="rm" onclick="rmSyn(${k})">✕</button>
+    <label class="fl" style="margin-top:0">Constat</label>
+    <textarea onchange="cur.synthese[${k}].d=this.value;saveSoon()">${esc(s.d||"")}</textarea>
+    <div class="critseg">`+[1,2,3,4].map(n=>`<button data-v="${n}" class="${s.crit==n?"on":""}" onclick="cur.synthese[${k}].crit=${n};saveSoon();renderSyn()">${n}</button>`).join("")+`</div>
+    <label class="fl">Piste d'action / contre-argument</label>
+    <textarea onchange="cur.synthese[${k}].a=this.value;saveSoon()">${esc(s.a||"")}</textarea></div>`;
+}
+function renderSyn(){$("#synList").innerHTML=cur.synthese.map((s,k)=>synTile(s,k)).join("")}
+function addSyn(){cur.synthese.push({d:"",crit:null,a:""});renderSyn();saveSoon()}
+async function rmSyn(k){if(await ask("Supprimer ce point de synthèse ?","Supprimer")){cur.synthese.splice(k,1);renderSyn();saveSoon()}}
+function tgl(el){el.parentElement.classList.toggle("open")}
+function setId(k,v){cur.ident[k]=v;$("#hSub").textContent=relTitle(cur);saveSoon()}
+function setA(i,j,key,val,btn){
+  const a=cur.sections[i].answers[j]||(cur.sections[i].answers[j]={});
+  a[key]=val;saveSoon();
+  if(btn){ /* refresh segment/scale visual without full rerender */
+    const grp=btn.parentElement;[...grp.children].forEach(b=>b.classList.remove("on","bad"));
+    if(val!==""&&val!==undefined){btn.classList.add("on");if(key==="v"&&typeof val==="number"&&val<=2&&grp.classList.contains("scale"))btn.classList.add("bad");}
+  }
+}
+function delPh(i,k){cur.sections[i].photos.splice(k,1);saveSoon();rerenderPhotos(i)}
+function rerenderPhotos(i){
+  const g=$("#phg-"+i);
+  g.innerHTML=cur.sections[i].photos.map((ph,k)=>phTile(i,k,ph)).join("")+
+    `<button class="addph" onclick="$('#phin-${i}').click()">＋<small>ajouter</small></button>`;
+}
+function viewPh(_,i,k){
+  const w=window.open("");if(w)w.document.write('<img style="width:100%" src="'+cur.sections[i].photos[k].d+'">');
+}
+async function addPhotos(i,input){
+  for(const f of input.files){
+    const d=await compress(f);
+    cur.sections[i].photos.push({d,l:"",ts:new Date().toISOString()});
+  }
+  input.value="";saveSoon();rerenderPhotos(i);
+}
+function compress(file){return new Promise(res=>{
+  const img=new Image();img.onload=()=>{
+    const M=1100;let w=img.width,h=img.height;
+    if(Math.max(w,h)>M){const r=M/Math.max(w,h);w=Math.round(w*r);h=Math.round(h*r)}
+    const c=document.createElement("canvas");c.width=w;c.height=h;
+    c.getContext("2d").drawImage(img,0,0,w,h);
+    res(c.toDataURL("image/jpeg",0.72));URL.revokeObjectURL(img.src);
+  };img.src=URL.createObjectURL(file);
+})}
+
+/* ================= EXPORT / IMPORT ================= */
+async function exportAll(){
+  const all=await dbAll();
+  if(!all.length){await ask("Aucun relevé à exporter.");return}
+  const blob=new Blob([JSON.stringify({app:"AUDIMAT-LPA",version:1,exportedAt:new Date().toISOString(),releves:all})],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  const d=new Date(),p=n=>String(n).padStart(2,"0");
+  a.download=`audimat_${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}.json`;
+  a.click();URL.revokeObjectURL(a.href);
+}
+$("#importFile").addEventListener("change",async e=>{
+  const f=e.target.files[0];if(!f)return;
+  try{
+    const data=JSON.parse(await f.text());
+    if(!data.releves)throw 0;
+    let added=0,updated=0;
+    for(const r of data.releves){
+      const ex=await dbGet(r.id);
+      if(!ex){await dbPut(r);added++}
+      else if(r.updatedAt>ex.updatedAt){await dbPut(r);updated++}
+    }
+    await ask(`Fusion terminée : ${added} relevé(s) ajouté(s), ${updated} mis à jour.`);
+    renderHome();
+  }catch{await ask("Fichier invalide : il faut un export AUDIMAT (.json).")}
+  e.target.value="";
+});
+
+/* ================= INIT ================= */
+window.startNew=startNew;window.openReleve=openReleve;window.delReleve=delReleve;
+window.tgl=tgl;window.setId=setId;window.setA=setA;window.addPhotos=addPhotos;window.delPh=delPh;
+window.addSyn=addSyn;window.rmSyn=rmSyn;window.exportAll=exportAll;window.viewPh=viewPh;window.$=$;
+openDB().then(renderHome);
+if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script>
+</body>
+</html>

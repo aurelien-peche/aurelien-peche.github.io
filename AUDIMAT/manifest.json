@@ -1,0 +1,9 @@
+{
+  "name": "AUDIMAT — Audit terrain LPA",
+  "short_name": "AUDIMAT",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#16273F",
+  "theme_color": "#16273F",
+  "icons": [{"src":"icon.png","sizes":"512x512","type":"image/png"}]
+}
